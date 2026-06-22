@@ -1,0 +1,12 @@
+=== STDOUT ===
+{"numTotalTestSuites":2,"numPassedTestSuites":2,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":1,"numPassedTests":1,"numFailedTests":0,"numPendingTests":0,"numTodoTests":0,"snapshot":{"added":0,"failure":false,"filesAdded":0,"filesRemoved":0,"filesRemovedList":[],"filesUnmatched":0,"filesUpdated":0,"matched":0,"total":0,"unchecked":0,"uncheckedKeysByFile":[],"unmatched":0,"updated":0,"didUpdate":false},"startTime":1781078024809,"success":true,"testResults":[{"assertionResults":[{"ancestorTitles":["trusted providers (dynamic)"],"fullName":"trusted providers (dynamic) static array still trusts the provider in OAuth account linking","status":"passed","title":"static array still trusts the provider in OAuth account linking","duration":215.2359290000004,"failureMessages":[],"meta":{}}],"startTime":1781078027680,"endTime":1781078027895.2358,"status":"passed","message":"","name":"/repo/better-auth/packages/better-auth/src/oauth2/verify.test.ts"}]}
+
+=== STDERR ===
+(node:2015) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+npm notice
+npm notice New major version of npm available! 10.9.7 -> 11.16.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.16.0
+npm notice To update run: npm install -g npm@11.16.0
+npm notice
+

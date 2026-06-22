@@ -1,0 +1,12 @@
+{
+  "harness": "miniswebench",
+  "model": "@bedrock/global.anthropic.claude-sonnet-4-6",
+  "returncode": 0,
+  "elapsed_ms": 129766,
+  "exit_status": "Submitted",
+  "invocation": 2,
+  "trajectory_path": "/logs/verifier/miniswebench/02.trajectory.json",
+  "stdout_path": "/logs/verifier/miniswebench/02.stdout.txt",
+  "stderr_path": "/logs/verifier/miniswebench/02.stderr.txt",
+  "error": ""
+}

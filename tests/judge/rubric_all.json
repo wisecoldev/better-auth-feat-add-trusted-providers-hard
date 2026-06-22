@@ -1,0 +1,46 @@
+{
+  "files": [
+    "packages/better-auth/src/api/routes/account.ts",
+    "packages/better-auth/src/api/routes/callback.ts",
+    "packages/better-auth/src/auth/base.ts",
+    "packages/better-auth/src/context/create-context.ts",
+    "packages/better-auth/src/context/helpers.ts",
+    "packages/better-auth/src/oauth2/link-account.ts",
+    "packages/better-auth/src/plugins/one-tap/index.ts",
+    "packages/core/src/types/context.ts",
+    "packages/core/src/types/init-options.ts",
+    "packages/sso/src/routes/sso.ts"
+  ],
+  "fail_to_pass": [
+    {
+      "name": "the_dynamic_resolver_is_consulted_on_every_account-linking_e",
+      "description": "The dynamic resolver is consulted on every account-linking entry point,\nnot just OAuth callback. Story exercises the same dynamic-trust\ncontract through `client.signIn.social` + `/callback/google` interplay\n(same public surface, but driven through the typed test client rather\nthan raw auth.handler \u2014 proves the feature is wired through both the\nrouting plumbing and the lower-level handler).\n"
+    },
+    {
+      "name": "the_dynamic_resolver's_return_value_drives_the_trust_decisio",
+      "description": "The dynamic resolver's return value drives the trust decision: when\nthe returned list does NOT contain the OAuth provider, an\nunverified-email account-linking attempt for that provider is rejected\n\u2014 confirming the implementation evaluates the resolver's content\nrather than merely accepting the function shape.\n"
+    },
+    {
+      "name": "the_dynamic_resolver_receives_the_incoming_request_and_can_p",
+      "description": "The dynamic resolver receives the incoming Request and can produce\nper-request-varying trust outcomes. With a single resolver that\nderives its return from properties of the request (header, query\nparameter, URL path), two callbacks made with different request\ninputs produce different outcomes \u2014 confirming per-request invocation\nrather than a once-cached value.\n"
+    },
+    {
+      "name": "a_function-shaped_trustedproviders_configuration_is_accepted",
+      "description": "A function-shaped trustedProviders configuration is accepted by the\npublic BetterAuthOptions surface. This documents the API-contract\nchange: the option's static type widened from T[] to T[] | ((request?:\nRequest) => Awaitable<T[]>).\n"
+    },
+    {
+      "name": "the_public_betterauthoptions_documentation_explains_that\ntru",
+      "description": "The public BetterAuthOptions documentation explains that\ntrustedProviders mirrors trustedOrigins' static-or-async-function\nshape, so application authors know they can supply a per-request\nresolver.\n"
+    },
+    {
+      "name": "every_existing_account-linking_trust_check_has_been_updated",
+      "description": "Every existing account-linking trust check has been updated to use the\nresolved trusted-providers list (whether stored on AuthContext or\nresolved inline at the callsite). This must include the interactive\nlinkSocial endpoint, the OAuth callback handler, the lower-level\nhandleOAuthUserInfo helper, the Google One Tap plugin's existing-user\nbranch, and the SAML SSO callback + ACS endpoints.\n"
+    }
+  ],
+  "pass_to_pass": [
+    {
+      "name": "static-array_trustedproviders_still_works._configuring\n`trus",
+      "description": "Static-array trustedProviders still works. Configuring\n`trustedProviders: ['google']` (the pre-extension shape) keeps the same\nunverified-email-linking behavior \u2014 regression guard.\n"
+    }
+  ]
+}

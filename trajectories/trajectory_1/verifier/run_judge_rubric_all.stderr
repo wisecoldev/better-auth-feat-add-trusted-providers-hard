@@ -1,0 +1,20 @@
+    read_file: packages/better-auth/src/oauth2/get-trusted-providers.ts
+    read_file: packages/core/src/types/init-options.ts [880-940]
+  [rubric turn 0] stop=tool_use tools=2
+    read_file: packages/better-auth/src/oauth2/dynamic-trusted-providers.test.ts
+    read_file: packages/better-auth/src/api/routes/callback.ts [165-200]
+  [rubric turn 1] stop=tool_use tools=2
+    read_file: packages/better-auth/src/api/routes/account.ts [285-325]
+    read_file: packages/better-auth/src/oauth2/link-account.ts [40-90]
+  [rubric turn 2] stop=tool_use tools=2
+    read_file: packages/better-auth/src/plugins/one-tap/index.ts [140-175]
+    read_file: packages/sso/src/routes/sso.ts [2355-2385]
+  [rubric turn 3] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2875-2910]
+    read_file: docs/content/docs/concepts/users-accounts.mdx [435-475]
+  [rubric turn 4] stop=tool_use tools=2
+    read_file: docs/content/docs/reference/options.mdx [435-455]
+    read_file: packages/telemetry/src/detectors/detect-auth-config.ts [95-120]
+  [rubric turn 5] stop=tool_use tools=2
+    submit_scores: 7 criteria
+  [rubric turn 6] stop=tool_use tools=1

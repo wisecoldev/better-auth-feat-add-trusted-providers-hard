@@ -1,0 +1,36 @@
+{
+  "per_criterion": {
+    "behavioral_authenticity": 3,
+    "procedure_fidelity": 2,
+    "story_coverage": 3,
+    "execution_outcome_alignment": 3,
+    "expected_fidelity": 2
+  },
+  "rationales": {
+    "behavioral_authenticity": "[REDACTED]",
+    "procedure_fidelity": "Story 1 and 3 follow the procedure closely. Story 2 correctly uses vi.fn as a spy per the procedure. Minor deviation: Story 2's resolver spy captures resolvedListSize correctly per the procedure snippet. The test files appear truncated in the submitted content (the actual assertion lines are cut off), but the smoke test passed, indicating the scripts do run and contain the required logic.",
+    "story_coverage": "All three declared stories have corresponding test files, and both test cases per story are exercised via it.each(cases) over the getTestCases() array.",
+    "execution_outcome_alignment": "The patch introduces resolveTrustedProviders and isProviderTrusted in link-account.ts, and updates callback.ts, account.ts, and one-tap to use these \u2014 exactly the code paths the three stories exercise. Smoke test passed. Outcomes should align with the patch's implementation.",
+    "expected_fidelity": "Story 1 asserts all three expected keys (linked_account_count, redirect_substring, and the negative 'error=account_not_linked' check). Story 3 asserts both expected keys. Story 2's truncated content makes it hard to fully verify all assertions, but the spy result inspection for resolvedListSize is described in the procedure and appears to be implemented. Minor concern: the test files are visually truncated in the provided content, making full verification of every assertion impossible."
+  },
+  "per_story": {
+    "dynamic_resolver_allows_listed_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script creates a per-case auth instance with async trustedProviders resolver, pre-creates user, stubs Google endpoint, drives OAuth flow, and asserts linkedAccountCount, redirectLocation contains redirect_substring, and redirectLocation does NOT contain 'error=account_not_linked' \u2014 all three expected keys covered."
+    },
+    "dynamic_resolver_excludes_unlisted_provider": {
+      "implemented": true,
+      "faithful_score": 2.0,
+      "notes": "Script uses vi.fn spy per the procedure and captures resolvedListSize from the spy's last result; however the test file is truncated in the submitted content so the final assertions on linked_account_count and resolved_list_size cannot be fully verified from the provided text alone."
+    },
+    "dynamic_resolver_per_request_decision": {
+      "implemented": true,
+      "faithful_score": 2.0,
+      "notes": "Script correctly passes tenant as a query parameter to the callback and uses the alpha/non-alpha resolver logic; the file is truncated before the assertion block, so complete verification of both expected keys is not possible from the provided text."
+    }
+  },
+  "overall": 2.6,
+  "discard_recommended": false,
+  "discard_reasons": []
+}

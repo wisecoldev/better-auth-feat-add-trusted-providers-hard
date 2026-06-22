@@ -1,0 +1,43 @@
+# Verifier runner configuration.
+#
+# This task ships ONE TypeScript vitest test file
+# (verify.test.ts). The js runner (src/resources/scripts/runners/js.py)
+# discovers verify*.test.ts files in /tests/verify/, copies them into
+# `repo_dir/test_parent`, then runs `npx vitest run <copied-path>
+# --reporter=json --testTimeout=...` from `repo_dir/config_dir`.
+#
+# Layout choices:
+# - config_dir = "" (run from /repo/better-auth, the workspace root,
+#   so the root vitest.config.ts and pnpm workspace deps resolve).
+# - test_parent = "packages/better-auth/src/oauth2" so the verifier's
+#   relative imports of `../crypto`, `../test-utils/test-instance`, and
+#   `../utils/constants` resolve the same way as the existing
+#   link-account.test.ts file in that directory.
+# - runner = "vitest" + the js runner uses `npx vitest run` with the
+#   `--reporter=json` flag the runner needs to parse results. (The
+#   `command` field is jest-only; vitest is hardcoded inside the runner.)
+# - timeout = 600 (10 min). Each test inside the file already has its own
+#   60s timeout. The outer subprocess timeout covers cold-start vitest +
+#   transitive workspace symlink resolution + 4 test runs back-to-back.
+#   The js runner adds +60s internally, so the actual subprocess wall is
+#   660s.
+#
+# Pre-conditions baked into the Dockerfile (see image/Dockerfile):
+# - `pnpm install --frozen-lockfile --ignore-scripts` populated
+#   node_modules.
+# - `pnpm build` produced dist/ for every workspace package, including
+#   `@better-auth/core` (whose `/error` subpath has no dev-source export
+#   and would otherwise break `getTestInstance` consumers).
+# - better-sqlite3 was rebuilt so getTestInstance's in-memory adapter
+#   loads.
+#
+# tests/test-setup.sh re-runs the build/install guards if an agent's
+# edits invalidated them, so re-runs are idempotent.
+
+[jest]
+config_dir = ""
+test_parent = "packages/better-auth/src/oauth2"
+runner = "vitest"
+command = "npx vitest"
+test_path_flag = "--testPathPattern"
+timeout = 600

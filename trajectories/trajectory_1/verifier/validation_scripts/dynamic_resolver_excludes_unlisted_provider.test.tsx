@@ -1,0 +1,137 @@
+// @ts-nocheck
+import type { GoogleProfile } from "@better-auth/core/social-providers";
+import { HttpResponse, http } from "msw";
+import { setupServer } from "msw/node";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  it,
+  expect,
+  vi,
+} from "vitest";
+import { signJWT } from "../../crypto";
+import { getTestInstance } from "../../test-utils/test-instance";
+import { DEFAULT_SECRET } from "../../utils/constants";
+
+import { getTestCases } from "./validationParams";
+
+const server = setupServer();
+beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+describe("dynamic_resolver_excludes_unlisted_provider", () => {
+  const cases = getTestCases();
+  it.each(cases)("case $#", async ({ inputs, expected }) => {
+    // Use a unique suffix per case to avoid DB collisions
+    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const email = `excludes-unlisted-${uniqueSuffix}@example.com`;
+    const sub = `google_excludes_unlisted_${uniqueSuffix}`;
+
+    // 1. Build a fresh auth instance with a vi.fn spy resolver
+    const resolverSpy = vi.fn(async (_request) => inputs.resolver_returns);
+
+    const { auth, client, cookieSetter } = await getTestInstance({
+      socialProviders: {
+        google: { clientId: "test", clientSecret: "test", enabled: true },
+      },
+      emailAndPassword: { enabled: true },
+      account: {
+        accountLinking: {
+          enabled: true,
+          trustedProviders: resolverSpy,
+        },
+      },
+    });
+    const ctx = await auth.$context;
+
+    // 2. Pre-create the user so the OAuth callback exercises the LINK branch
+    const created = await ctx.adapter.create({
+      model: "user",
+      data: {
+        email,
+        name: "Existing User",
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+    const userId = created.id;
+
+    // 3. Stub the Google token-exchange endpoint via msw
+    server.use(
+      http.post("https://oauth2.googleapis.com/token", async () => {
+        const profile: GoogleProfile = {
+          email,
+          email_verified: false, // unverified -> trustedProviders gates
+          name: "Test User",
+          picture: "https://example.com/photo.jpg",
+          sub,
+          iat: 1234567890,
+          exp: 1234567890,
+          aud: "test",
+          azp: "test",
+          nbf: 1234567890,
+          iss: "test",
+          locale: "en",
+          jti: "test",
+          given_name: "Test",
+          family_name: "User",
+        };
+        const idToken = await signJWT(profile, DEFAULT_SECRET);
+        return HttpResponse.json({
+          access_token: "test_access_token",
+          refresh_token: "test_refresh_token",
+          id_token: idToken,
+        });
+      }),
+    );
+
+    // 4. Drive client.signIn.social and capture the redirect URL state
+    const oAuthHeaders = new Headers();
+    const signInRes = await client.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+      fetchOptions: { onSuccess: cookieSetter(oAuthHeaders) },
+    });
+    const state =
+      new URL(signInRes.data!.url!).searchParams.get("state") || "";
+
+    // 5. Drive the actual OAuth callback
+    let redirectLocation = "";
+    await client.$fetch("/callback/google", {
+      query: { state, code: "test_code" },
+      method: "GET",
+      headers: oAuthHeaders,
+      onError(c) {
+        redirectLocation = c.response.headers.get("location") || "";
+      },
+      onSuccess(c) {
+        redirectLocation = c.response.headers.get("location") || "";
+      },
+    });
+
+    // 6. Count linked accounts for this sub
+    const accounts = await ctx.adapter.findMany<{
+      providerId: string;
+      accountId: string;
+    }>({
+      model: "account",
+      where: [{ field: "accountId", value: sub }],
+    });
+    const linkedAccountCount = accounts.filter(
+      (a) => a.providerId === "google" && a.accountId === sub,
+    ).length;
+
+    // 7. Capture the resolved list size from the spy
+    const last = resolverSpy.mock.results.at(-1)?.value;
+    const lastList = await last;
+    const resolvedListSize = Array.isArray(lastList) ? lastList.length : -1;
+
+    // Assertions
+    expect(linkedAccountCount).toBe(expected.linked_account_count);
+    expect(resolvedListSize).toBe(expected.resolved_list_size);
+  });
+});

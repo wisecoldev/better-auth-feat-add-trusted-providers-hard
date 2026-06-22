@@ -1,0 +1,230 @@
+{
+  "reward": 1.0,
+  "correctness": 1.0,
+  "verifier": {
+    "passed": 1,
+    "total": 1,
+    "all_pass": true,
+    "tests": {
+      "js::trusted providers (dynamic) static array still trusts the provider in OAuth account linking": {
+        "pass": true
+      }
+    }
+  },
+  "rubric": {
+    "score": 1.0,
+    "fail_to_pass_score": 1.0,
+    "pass_to_pass_score": null,
+    "status": "ok",
+    "trusted_providers_type_widened_to_function": 1.0,
+    "all_account_linking_callsites_use_resolved_list": 1.0,
+    "documentation_explains_dynamic_shape": 1.0
+  },
+  "taste": {
+    "patch_bloat": {
+      "agent_sloc": 139,
+      "agent_files": 11,
+      "agent_hunks": 18,
+      "oracle_sloc": 91,
+      "oracle_files": 10,
+      "oracle_hunks": 15,
+      "bloat_ratio": 1.527,
+      "agent_sloc_unfiltered": 314,
+      "agent_files_unfiltered": 14,
+      "oracle_sloc_unfiltered": 91,
+      "oracle_files_unfiltered": 10,
+      "bloat_ratio_unfiltered": 3.451,
+      "agent_files_dropped": [
+        "docs/content/docs/concepts/users-accounts.mdx",
+        "docs/content/docs/reference/options.mdx",
+        "packages/better-auth/src/oauth2/dynamic-trusted-providers.test.ts"
+      ],
+      "oracle_files_dropped": []
+    },
+    "patch_classifications": {
+      "agent": [
+        {
+          "path": "docs/content/docs/concepts/users-accounts.mdx",
+          "category": "doc",
+          "rationale": "Standalone markdown documentation file intended for human readers, not consumed by the runtime."
+        },
+        {
+          "path": "docs/content/docs/reference/options.mdx",
+          "category": "doc",
+          "rationale": "Standalone markdown reference documentation file for user consumption."
+        },
+        {
+          "path": "packages/better-auth/src/api/index.ts",
+          "category": "behavioral",
+          "rationale": "Production TypeScript source file that exports API functionality."
+        },
+        {
+          "path": "packages/better-auth/src/api/routes/account.ts",
+          "category": "behavioral",
+          "rationale": "Production route handler implementing account API logic."
+        },
+        {
+          "path": "packages/better-auth/src/api/routes/callback.ts",
+          "category": "behavioral",
+          "rationale": "Production route handler implementing callback logic."
+        },
+        {
+          "path": "packages/better-auth/src/context/helpers.ts",
+          "category": "behavioral",
+          "rationale": "Production utility helper module for context operations."
+        },
+        {
+          "path": "packages/better-auth/src/oauth2/dynamic-trusted-providers.test.ts",
+          "category": "test",
+          "rationale": "Test file with .test.ts extension verifying OAuth2 provider functionality."
+        },
+        {
+          "path": "packages/better-auth/src/oauth2/get-trusted-providers.ts",
+          "category": "behavioral",
+          "rationale": "Production module implementing trusted provider retrieval logic."
+        },
+        {
+          "path": "packages/better-auth/src/oauth2/index.ts",
+          "category": "behavioral",
+          "rationale": "Production OAuth2 module entry point."
+        },
+        {
+          "path": "packages/better-auth/src/oauth2/link-account.ts",
+          "category": "behavioral",
+          "rationale": "Production module implementing account linking logic."
+        },
+        {
+          "path": "packages/better-auth/src/plugins/one-tap/index.ts",
+          "category": "behavioral",
+          "rationale": "Production plugin implementation for one-tap authentication."
+        },
+        {
+          "path": "packages/core/src/types/init-options.ts",
+          "category": "behavioral",
+          "rationale": "Production TypeScript type definitions for initialization options consumed at runtime."
+        },
+        {
+          "path": "packages/sso/src/routes/sso.ts",
+          "category": "behavioral",
+          "rationale": "Production route handler implementing single sign-on logic."
+        },
+        {
+          "path": "packages/telemetry/src/detectors/detect-auth-config.ts",
+          "category": "behavioral",
+          "rationale": "Production telemetry detector module analyzing authentication configuration."
+        }
+      ],
+      "oracle": [
+        {
+          "path": "packages/better-auth/src/api/routes/account.ts",
+          "category": "behavioral",
+          "rationale": "Production API route handler for account operations."
+        },
+        {
+          "path": "packages/better-auth/src/api/routes/callback.ts",
+          "category": "behavioral",
+          "rationale": "Production API route handler for OAuth callback processing."
+        },
+        {
+          "path": "packages/better-auth/src/auth/base.ts",
+          "category": "behavioral",
+          "rationale": "Core authentication base implementation affecting runtime behavior."
+        },
+        {
+          "path": "packages/better-auth/src/context/create-context.ts",
+          "category": "behavioral",
+          "rationale": "Production helper for context creation used at runtime."
+        },
+        {
+          "path": "packages/better-auth/src/context/helpers.ts",
+          "category": "behavioral",
+          "rationale": "Production utility functions for context handling."
+        },
+        {
+          "path": "packages/better-auth/src/oauth2/link-account.ts",
+          "category": "behavioral",
+          "rationale": "Production OAuth2 account linking implementation."
+        },
+        {
+          "path": "packages/better-auth/src/plugins/one-tap/index.ts",
+          "category": "behavioral",
+          "rationale": "Production plugin implementation for one-tap authentication."
+        },
+        {
+          "path": "packages/core/src/types/context.ts",
+          "category": "behavioral",
+          "rationale": "TypeScript type definitions for context used by the runtime."
+        },
+        {
+          "path": "packages/core/src/types/init-options.ts",
+          "category": "behavioral",
+          "rationale": "TypeScript type definitions for initialization options used by the runtime."
+        },
+        {
+          "path": "packages/sso/src/routes/sso.ts",
+          "category": "behavioral",
+          "rationale": "Production SSO route handler implementation."
+        }
+      ]
+    },
+    "taste": {
+      "practice_alignment_score": 3.2,
+      "relative_taste_score": 2.4,
+      "pa_style_consistency": 3,
+      "pa_pattern_adherence": 2,
+      "pa_library_usage": 4,
+      "pa_abstraction_level": 3,
+      "pa_documentation_fit": 4,
+      "rt_minimality": 2,
+      "rt_approach_quality": 2,
+      "rt_hygiene": 3,
+      "rt_fluency": 3,
+      "rt_craftsmanship": 2
+    }
+  },
+  "taste_rationales": {
+    "pa_style_consistency_rationale": "The agent's code is generally well-formatted and follows naming conventions, but creates an extra file (`get-trusted-providers.ts`) rather than placing the function in the established `context/helpers.ts` location alongside its sibling `getTrustedOrigins`.",
+    "pa_pattern_adherence_rationale": "The agent misses the core architectural pattern of populating `trustedProviders` into `AuthContext` (both in `create-context.ts` and `base.ts`) and reading it from `c.context.trustedProviders` at callsites \u2014 instead calling an async helper on every request, which diverges from how `trustedOrigins` is handled.",
+    "pa_library_usage_rationale": "The agent uses the same libraries and imports as the rest of the codebase without introducing any new dependencies.",
+    "pa_abstraction_level_rationale": "The agent's abstraction (standalone `getTrustedProviders` function) is reasonable but one level below the project's established pattern of caching resolved values in the `AuthContext` object for per-request use.",
+    "pa_documentation_fit_rationale": "The agent adds verbose JSDoc comments with examples that are somewhat richer than the oracle's but still fit the project's documentation style; the extra verbosity is a minor stylistic deviation.",
+    "rt_minimality_rationale": "The agent introduces an extra file, multiple re-exports in `api/index.ts`, `context/helpers.ts`, and `oauth2/index.ts`, and a test file \u2014 all of which are unnecessary given the oracle's approach; the oracle achieves the same result with fewer, more focused changes.",
+    "rt_approach_quality_rationale": "By not adding `trustedProviders` to `AuthContext` and instead calling `getTrustedProviders()` async at every callsite, the agent misses the architectural root of the problem \u2014 the per-request context update pattern \u2014 leading to redundant async calls and inconsistency with `trustedOrigins`.",
+    "rt_hygiene_rationale": "The implementation is functionally correct and handles edge cases (null/undefined filtering, function vs array), but the per-callsite async invocation and the extra exports add unnecessary complexity that the oracle avoids cleanly.",
+    "rt_fluency_rationale": "The agent demonstrates understanding of the domain (account linking, trusted providers, SSO) and uses the APIs correctly, but misses the idiomatic way the codebase stores computed context values in `AuthContext`.",
+    "rt_craftsmanship_rationale": "A senior maintainer would ask why `trustedProviders` isn't on `AuthContext` like `trustedOrigins`, why there's a new file instead of extending `context/helpers.ts`, and why there are extra re-exports; the oracle's approach is cleaner, more consistent, and requires fewer changes."
+  },
+  "rubric_all": {
+    "rubric_score": 1.0,
+    "fail_to_pass_score": 1.0,
+    "pass_to_pass_score": 1.0,
+    "the_dynamic_resolver_is_consulted_on_every_account-linking_e": 1.0,
+    "the_dynamic_resolver's_return_value_drives_the_trust_decisio": 1.0,
+    "the_dynamic_resolver_receives_the_incoming_request_and_can_p": 1.0,
+    "a_function-shaped_trustedproviders_configuration_is_accepted": 1.0,
+    "the_public_betterauthoptions_documentation_explains_that\ntru": 1.0,
+    "every_existing_account-linking_trust_check_has_been_updated": 1.0,
+    "static-array_trustedproviders_still_works._configuring\n`trus": 1.0
+  },
+  "validation": {
+    "score": 1.0,
+    "passed_stories": 3,
+    "total_stories": 3,
+    "passed_cases": 6,
+    "total_cases": 6,
+    "stories": {
+      "dynamic_resolver_allows_listed_provider": {
+        "pass": true,
+        "reason": "OK"
+      },
+      "dynamic_resolver_excludes_unlisted_provider": {
+        "pass": true,
+        "reason": "OK"
+      },
+      "dynamic_resolver_per_request_decision": {
+        "pass": true,
+        "reason": "OK"
+      }
+    }
+  }
+}

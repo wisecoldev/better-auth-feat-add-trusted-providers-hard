@@ -1,0 +1,116 @@
+[main 29da51bf0] agent changes
+ 11 files changed, 245 insertions(+), 33 deletions(-)
+v22.22.2
+10.28.2
+[test-setup] ready: /repo/better-auth (node=v22.22.2, pnpm=10.28.2)
+Rubric judge (agentic): 11 changed files, 4 extra reference files
+    read_file: packages/core/src/types/init-options.ts [880-915]
+    read_file: packages/better-auth/src/oauth2/link-account.ts
+  [rubric turn 0] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2350-2400]
+    read_file: packages/better-auth/src/plugins/one-tap/index.ts [140-175]
+  [rubric turn 1] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2860-2910]
+    read_file: docs/content/docs/reference/options.mdx [430-475]
+  [rubric turn 2] stop=tool_use tools=2
+    read_file: packages/better-auth/src/oauth2/link-account.ts [70-95]
+    read_file: packages/sso/src/routes/sso.ts [1-30]
+  [rubric turn 3] stop=tool_use tools=2
+    read_file: docs/content/docs/concepts/users-accounts.mdx [435-480]
+    read_file: docs/content/docs/plugins/sso.mdx [1440-1465]
+  [rubric turn 4] stop=tool_use tools=2
+    submit_scores: 3 criteria
+  [rubric turn 5] stop=tool_use tools=1
+LLM judge complete. fail_to_pass=1.00 pass_to_pass=n/a rubric=1.00 (3 criteria)
+  [F+] trusted_providers_type_widened_to_function: The `trustedProviders` type in `packages/core/src/types/init-options.ts` has been widened to a union type accepting either `Array<TrustedProvider>` or `((request?: Request | undefined) => Awaitable<(TrustedProvider | undefined | null)[]>)`. Both branches are part of the static type, and a new `TrustedProvider` type alias is exported. Applications can assign either shape without a TypeScript error.
+  [F+] all_account_linking_callsites_use_resolved_list: All account-linking trust checks now use the resolved list: (1) `account.ts` (linkSocialAccount) uses `await isProviderTrusted(c, provider.id)`, (2) `callback.ts` (callbackOAuth) uses `await isProviderTrusted(c, provider.id)`, (3) `link-account.ts` (handleOAuthUserInfo) uses `await isProviderTrusted(c, account.providerId)` when `opts.isTrustedProvider !== true`, (4) `one-tap/index.ts` uses `await isProviderTrusted(ctx, 'google')`, (5) both SAML SSO endpoints (`callbackSSOSAML` and `acsEndpoint`) removed direct `trustedProviders.includes()` and pass `isTrustedProvider` to `handleOAuthUserInfo`, which then also calls `isProviderTrusted` internally for the OR condition — ensuring the dynamic resolver is consulted.
+  [F+] documentation_explains_dynamic_shape: The dynamic function shape is documented in multiple places: (1) the JSDoc comment on the type in `init-options.ts` explains it returns trusted providers for the current request, (2) `docs/content/docs/reference/options.mdx` has an updated description and a full code example showing the async request-receiving function, (3) `docs/content/docs/concepts/users-accounts.mdx` adds a dedicated section with code example for multi-tenant applications, and (4) `docs/content/docs/plugins/sso.mdx` adds a note about the async resolver for multi-tenant SSO.
+Rubric judge (agentic): 11 changed files, 4 extra reference files
+    read_file: packages/better-auth/src/oauth2/link-account.ts
+    read_file: packages/core/src/types/init-options.ts [880-920]
+  [rubric turn 0] stop=tool_use tools=2
+    read_file: packages/better-auth/src/oauth2/link-account.test.ts [567-720]
+    read_file: packages/better-auth/src/api/routes/account.ts [280-310]
+  [rubric turn 1] stop=tool_use tools=2
+    read_file: packages/better-auth/src/api/routes/callback.ts [170-200]
+    read_file: packages/better-auth/src/plugins/one-tap/index.ts [145-175]
+  [rubric turn 2] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2355-2385]
+    read_file: packages/sso/src/routes/sso.ts [2870-2900]
+  [rubric turn 3] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2385-2405]
+    read_file: packages/sso/src/routes/sso.ts [2900-2920]
+  [rubric turn 4] stop=tool_use tools=2
+    read_file: docs/content/docs/concepts/users-accounts.mdx [430-475]
+    read_file: docs/content/docs/reference/options.mdx [430-475]
+  [rubric turn 5] stop=tool_use tools=2
+    read_file: packages/telemetry/src/detectors/detect-auth-config.ts [1-120]
+    read_file: packages/better-auth/src/oauth2/link-account.test.ts [1-50]
+  [rubric turn 6] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2300-2370]
+    read_file: docs/content/docs/plugins/sso.mdx [1440-1465]
+  [rubric turn 7] stop=tool_use tools=2
+    read_file: packages/better-auth/src/oauth2/link-account.ts [63-92]
+  [rubric turn 8] stop=tool_use tools=1
+    submit_scores: 7 criteria
+  [rubric turn 9] stop=tool_use tools=1
+LLM judge complete. fail_to_pass=0.95 pass_to_pass=1.00 rubric=0.96 (7 criteria)
+  [F+] the_dynamic_resolver_is_consulted_on_every_account-linking_e: The test in link-account.test.ts uses client.signIn.social + /callback/google (typed test client), and the implementation wires isProviderTrusted through callback.ts, account.ts (linkSocial), link-account.ts (handleOAuthUserInfo), one-tap/index.ts, and sso.ts. The dynamic resolver is consulted at every entry point.
+  [F+] the_dynamic_resolver's_return_value_drives_the_trust_decisio: The test verifies that when the resolver returns [] (untrusted tenant), the unverified-email linking is rejected with error=account_not_linked, and when it returns ['google'] (trusted tenant), linking succeeds. The resolver's return value explicitly drives the trust decision.
+  [F+] the_dynamic_resolver_receives_the_incoming_request_and_can_p: The test uses a single resolver that reads the x-tenant header from the Request. Two callbacks with different header values ('trusted' vs 'untrusted') produce different outcomes, confirmed by assertions on trustedProviders.mock.calls. resolveTrustedProviders passes c.request to the function.
+  [F+] a_function-shaped_trustedproviders_configuration_is_accepted: In packages/core/src/types/init-options.ts, the trustedProviders type is widened to Array<TrustedProvider> | ((request?: Request | undefined) => Awaitable<(TrustedProvider | undefined | null)[]>), accepting both static arrays and async functions.
+  [F+] the_public_betterauthoptions_documentation_explains_that
+tru: docs/content/docs/reference/options.mdx explains the async resolver shape with a code example. docs/content/docs/concepts/users-accounts.mdx also documents the async function form with a multi-tenant example.
+  [F+] every_existing_account-linking_trust_check_has_been_updated: The linkSocial endpoint (account.ts), OAuth callback (callback.ts), handleOAuthUserInfo (link-account.ts), and Google One Tap (one-tap/index.ts) are all updated to use isProviderTrusted. However, for SAML SSO (sso.ts), the agent removed the trustedProviders.includes() check entirely rather than using isProviderTrusted, meaning the dynamic resolver is NOT consulted for SAML SSO providers — only domain verification is used. This is a partial regression for the SAML path.
+  [P+] static-array_trustedproviders_still_works._configuring
+`trus: resolveTrustedProviders checks Array.isArray(trustedProviders) and returns the array directly if true, preserving the original behavior. Existing tests using trustedProviders: ['google'] continue to work correctly.
+  [taste turn 0] stop=tool_use tools=2
+  [taste turn 1] stop=tool_use tools=2
+  [taste turn 2] stop=tool_use tools=2
+  [taste turn 3] stop=tool_use tools=2
+  [taste turn 4] stop=tool_use tools=2
+  [taste turn 5] stop=tool_use tools=2
+  [taste turn 6] stop=tool_use tools=2
+  [taste turn 7] stop=tool_use tools=2
+  [taste turn 8] stop=tool_use tools=2
+  [taste turn 9] stop=tool_use tools=2
+  [taste turn 10] stop=tool_use tools=1
+  [taste turn 11] stop=tool_use tools=1
+  [taste turn 12] stop=tool_use tools=1
+  [taste turn 13] stop=tool_use tools=1
+  [taste turn 14] stop=end_turn tools=0
+Patch bloat: agent=85 SLOC / oracle=91 SLOC → ratio=0.934 (unfiltered ratio=2.769), 4 agent files dropped
+Taste: practice_alignment=2.8/5 relative_taste=2.2/5
+  [Practice] style_consistency=3/5: The agent follows TypeScript and naming conventions but places helper functions in the wrong module (`link-account.ts` instead of `context/helpers.ts`), breaking the established organizational pattern of the codebase.
+  [Practice] pattern_adherence=2/5: The codebase clearly establishes a pattern of resolving values once per request and storing them on context (as seen with `trustedOrigins`), but the agent instead resolves `trustedProviders` dynamically on each call site with `await`, diverging from this core pattern.
+  [Practice] library_usage=4/5: No new libraries introduced; uses existing utilities like `Awaitable` and `LiteralUnion` correctly.
+  [Practice] abstraction_level=2/5: The agent introduces per-call async resolution instead of context-level caching, and adds an unnecessary `TrustedProvider` type alias rather than keeping the inline type like the rest of the codebase does.
+  [Practice] documentation_fit=3/5: The JSDoc comment added to `init-options.ts` is reasonable but includes extra `@example` blocks not typical of the surrounding documentation style; the oracle uses inline descriptions without examples.
+  [Taste] minimality=3/5: The agent introduces extra exported functions (`resolveTrustedProviders`, `isProviderTrusted`) and a `TrustedProvider` type alias that the oracle avoids; however the telemetry fix is a useful bonus not in the oracle patch.
+  [Taste] approach_quality=2/5: The approach of per-call async resolution instead of context-level caching is architecturally inferior — it re-evaluates the function on every trust check and misses the established request-lifecycle pattern; additionally, removing the `trustedProviders` check from `sso.ts` rather than using OR logic is a functional regression.
+  [Taste] hygiene=2/5: The SSO regression (removing `trustedProviders.includes(provider.providerId)` with OR instead of replacing it) is a correctness bug, and the `opts.isTrustedProvider === true` strictness change is an unnecessary semantic deviation from the oracle.
+  [Taste] fluency=2/5: The agent misunderstands the domain pattern — `AuthContext` fields are the idiomatic way to share per-request resolved values, and the agent bypasses this entirely, showing unfamiliarity with how the framework's context lifecycle works.
+  [Taste] craftsmanship=2/5: Multiple issues compound: wrong file placement for helper, missing `AuthContext` type update, missing `create-context.ts` and `base.ts` wiring, SSO regression, and unnecessary type alias — a senior maintainer would require significant rework before approving.
+Taste evaluation complete.
+Running validation setup...
+v22.22.2
+10.28.2
+vitest/4.0.18 linux-x64 node-v22.22.2
+[validation-setup] Missing dist files: /repo/better-auth/packages/better-auth/dist/test-utils/test-instance.js, /repo/better-auth/packages/better-auth/dist/crypto.js
+[validation-setup] ready: /repo/better-auth
+Installing mini-swe-agent==2.3.0...
+============================================================
+  VALIDATION: User Story Verification
+============================================================
+  Base ref: 709c1e1c0518 | Stories: 3 | VA: miniswebench/@bedrock/global.anthropic.claude-sonnet-4-6
+  Pre-CC checkpoint: 674228ca25f4
+  Stage 1: Generating scripts via miniswebench (model=@bedrock/global.anthropic.claude-sonnet-4-6)...
+  Stage 1.6: Pre-retry judge — 5 actionable
+  Stage 1.7: Retrying with error feedback...
+  Stage 2: Executing and verifying...
+  [dynamic_resolver_allows_listed_provider] PASS (2 cases)
+  [dynamic_resolver_excludes_unlisted_provider] PASS (2 cases)
+  [dynamic_resolver_per_request_decision] PASS (2 cases)
+
+  Stories: 3/3 | Cases: 6/6 | Score: 1.0
+  Stage 2.5: Post-exec judge — score=3.00

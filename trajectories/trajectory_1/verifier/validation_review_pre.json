@@ -1,0 +1,36 @@
+{
+  "per_criterion": {
+    "behavioral_authenticity": 3,
+    "procedure_fidelity": 2,
+    "story_coverage": 3,
+    "execution_outcome_alignment": 3,
+    "expected_fidelity": 2
+  },
+  "rationales": {
+    "behavioral_authenticity": "[REDACTED]",
+    "procedure_fidelity": "Story 1 and 3 follow the procedure closely. Story 2 correctly uses vi.fn as prescribed. However, the displayed script bodies are truncated mid-line, so a full audit is not possible; from what is visible the structure is correct with only minor stylistic divergences.",
+    "story_coverage": "All three stories have corresponding generated scripts, and both test cases per story are driven via it.each(cases).",
+    "execution_outcome_alignment": "The patch introduces getTrustedProviders supporting async resolver functions; the tests exercise exactly that code path. Smoke test passed. Expected outcomes (linked vs. rejected) align with what the patch implements.",
+    "expected_fidelity": "Story 1 asserts all three expected keys (linkedAccountCount, redirect_substring contains, error NOT present). Story 2 asserts linkedAccountCount and resolvedListSize. Story 3 asserts linkedAccountCount and redirect_substring. The scripts appear complete from what is visible, but the truncation of the displayed source makes a definitive audit of every key impossible for the last portion of each file, hence a minor deduction."
+  },
+  "per_story": {
+    "dynamic_resolver_allows_listed_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script uses async resolver returning inputs.resolver_returns, asserts linkedAccountCount, redirect_substring, and absence of error=account_not_linked per procedure."
+    },
+    "dynamic_resolver_excludes_unlisted_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script wraps resolver in vi.fn spy, reads mock.results to compute resolvedListSize, and asserts both linkedAccountCount and resolvedListSize as prescribed."
+    },
+    "dynamic_resolver_per_request_decision": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script passes tenant query param to callback, uses the prescribed resolver branching on url.searchParams.get('tenant'), and asserts both linkedAccountCount and redirect_substring per procedure."
+    }
+  },
+  "overall": 2.6,
+  "discard_recommended": false,
+  "discard_reasons": []
+}

@@ -1,0 +1,33 @@
+{
+  "validation_score": 1.0,
+  "passed_stories": 3,
+  "total_stories": 3,
+  "passed_cases": 6,
+  "total_cases": 6,
+  "stories": {
+    "dynamic_resolver_allows_listed_provider": {
+      "pass": true,
+      "reason": "OK"
+    },
+    "dynamic_resolver_excludes_unlisted_provider": {
+      "pass": true,
+      "reason": "OK"
+    },
+    "dynamic_resolver_per_request_decision": {
+      "pass": true,
+      "reason": "OK"
+    }
+  },
+  "validation_agent_harness": "miniswebench",
+  "validation_agent_model": "@bedrock/global.anthropic.claude-sonnet-4-6",
+  "review_judge_overall": 3.0,
+  "review_judge_per_criterion": {
+    "behavioral_authenticity": 3,
+    "procedure_fidelity": 3,
+    "story_coverage": 3,
+    "execution_outcome_alignment": 3,
+    "expected_fidelity": 3
+  },
+  "review_judge_discard_recommended": false,
+  "review_judge_discard_reasons": []
+}

@@ -1,0 +1,312 @@
+diff --git a/packages/better-auth/src/api/index.ts b/packages/better-auth/src/api/index.ts
+index 35b6c454f..16fcf578c 100644
+--- a/packages/better-auth/src/api/index.ts
++++ b/packages/better-auth/src/api/index.ts
+@@ -376,6 +376,7 @@ export {
+ 	optionsMiddleware,
+ } from "@better-auth/core/api";
+ export { APIError } from "@better-auth/core/error";
++export { getTrustedProviders } from "../oauth2/get-trusted-providers";
+ export { getIp } from "../utils/get-request-ip";
+ export { isAPIError } from "../utils/is-api-error";
+ export * from "./middlewares";
+diff --git a/packages/better-auth/src/api/routes/account.ts b/packages/better-auth/src/api/routes/account.ts
+index 8f462b935..987982489 100644
+--- a/packages/better-auth/src/api/routes/account.ts
++++ b/packages/better-auth/src/api/routes/account.ts
+@@ -6,6 +6,7 @@ import { SocialProviderListEnum } from "@better-auth/core/social-providers";
+ 
+ import * as z from "zod";
+ import { getAwaitableValue } from "../../context/helpers";
++import { getTrustedProviders } from "../../oauth2/get-trusted-providers";
+ import {
+ 	getAccountCookie,
+ 	setAccountCookie,
+@@ -294,10 +295,12 @@ export const linkSocialAccount = createAuthEndpoint(
+ 				});
+ 			}
+ 
+-			const trustedProviders =
+-				c.context.options.account?.accountLinking?.trustedProviders;
++			const trustedProviders = await getTrustedProviders(
++				c.context.options,
++				c.request,
++			);
+ 
+-			const isTrustedProvider = trustedProviders?.includes(provider.id);
++			const isTrustedProvider = trustedProviders.includes(provider.id);
+ 			if (
+ 				(!isTrustedProvider && !linkingUserInfo.user.emailVerified) ||
+ 				c.context.options.account?.accountLinking?.enabled === false
+diff --git a/packages/better-auth/src/api/routes/callback.ts b/packages/better-auth/src/api/routes/callback.ts
+index 81d6e4cf3..135f0ae7a 100644
+--- a/packages/better-auth/src/api/routes/callback.ts
++++ b/packages/better-auth/src/api/routes/callback.ts
+@@ -3,6 +3,7 @@ import type { OAuth2Tokens } from "@better-auth/core/oauth2";
+ import { safeJSONParse } from "@better-auth/core/utils/json";
+ import * as z from "zod";
+ import { getAwaitableValue } from "../../context/helpers";
++import { getTrustedProviders } from "../../oauth2/get-trusted-providers";
+ import { setSessionCookie } from "../../cookies";
+ import { handleOAuthUserInfo } from "../../oauth2/link-account";
+ import { parseState } from "../../oauth2/state";
+@@ -175,9 +176,11 @@ export const callbackOAuth = createAuthEndpoint(
+ 		}
+ 
+ 		if (link) {
+-			const trustedProviders =
+-				c.context.options.account?.accountLinking?.trustedProviders;
+-			const isTrustedProvider = trustedProviders?.includes(provider.id);
++			const trustedProviders = await getTrustedProviders(
++				c.context.options,
++				c.request,
++			);
++			const isTrustedProvider = trustedProviders.includes(provider.id);
+ 			if (
+ 				(!isTrustedProvider && !userInfo.emailVerified) ||
+ 				c.context.options.account?.accountLinking?.enabled === false
+diff --git a/packages/better-auth/src/context/helpers.ts b/packages/better-auth/src/context/helpers.ts
+index 8c45ccde7..750f93387 100644
+--- a/packages/better-auth/src/context/helpers.ts
++++ b/packages/better-auth/src/context/helpers.ts
+@@ -9,6 +9,7 @@ import { defu } from "defu";
+ import { createInternalAdapter } from "../db";
+ import { isPromise } from "../utils/is-promise";
+ import { getBaseURL } from "../utils/url";
++export { getTrustedProviders } from "../oauth2/get-trusted-providers";
+ 
+ export async function runPluginInit(context: AuthContext) {
+ 	let options = context.options;
+@@ -80,6 +81,7 @@ export async function getTrustedOrigins(
+ 	}
+ 	return trustedOrigins.filter((v): v is string => Boolean(v));
+ }
++
+ export async function getAwaitableValue<T extends Record<string, any>>(
+ 	arr: AwaitableFunction<T>[] | undefined,
+ 	item: { field?: string; value: string },
+diff --git a/packages/better-auth/src/oauth2/get-trusted-providers.ts b/packages/better-auth/src/oauth2/get-trusted-providers.ts
+new file mode 100644
+index 000000000..3d62a5855
+--- /dev/null
++++ b/packages/better-auth/src/oauth2/get-trusted-providers.ts
+@@ -0,0 +1,34 @@
++import type { BetterAuthOptions } from "@better-auth/core";
++
++/**
++ * Resolve the account-linking trusted providers allow-list.
++ *
++ * The allow-list can either be a static array of providers or a
++ * function (sync or async) that computes the list per request. This
++ * mirrors the shape used by `trustedOrigins` and enables dynamically
++ * computing the allow-list based on the incoming request (e.g. for
++ * enterprise SAML where trust depends on the tenant identified by
++ * something on the request).
++ *
++ * @param options - The Better Auth options.
++ * @param request - The incoming request, if any. Passed through to the
++ * dynamic resolver so trust decisions can vary per request.
++ * @returns A resolved array of trusted provider ids.
++ */
++export async function getTrustedProviders(
++	options: BetterAuthOptions,
++	request?: Request,
++): Promise<string[]> {
++	const trustedProviders = options.account?.accountLinking?.trustedProviders;
++	if (!trustedProviders) {
++		return [];
++	}
++	if (Array.isArray(trustedProviders)) {
++		return trustedProviders.filter((v): v is string => Boolean(v));
++	}
++	if (typeof trustedProviders === "function") {
++		const resolved = await trustedProviders(request);
++		return (resolved ?? []).filter((v): v is string => Boolean(v));
++	}
++	return [];
++}
+diff --git a/packages/better-auth/src/oauth2/index.ts b/packages/better-auth/src/oauth2/index.ts
+index be3756a2b..dd047a156 100644
+--- a/packages/better-auth/src/oauth2/index.ts
++++ b/packages/better-auth/src/oauth2/index.ts
+@@ -1,4 +1,5 @@
+ export * from "@better-auth/core/oauth2";
++export * from "./get-trusted-providers";
+ export * from "./link-account";
+ export * from "./state";
+ export * from "./utils";
+diff --git a/packages/better-auth/src/oauth2/link-account.ts b/packages/better-auth/src/oauth2/link-account.ts
+index c42f4f70a..e3baeb80f 100644
+--- a/packages/better-auth/src/oauth2/link-account.ts
++++ b/packages/better-auth/src/oauth2/link-account.ts
+@@ -4,6 +4,7 @@ import { createEmailVerificationToken } from "../api";
+ import { setAccountCookie } from "../cookies/session-store";
+ import type { Account, User } from "../types";
+ import { isAPIError } from "../utils/is-api-error";
++import { getTrustedProviders } from "./get-trusted-providers";
+ import { setTokenUtil } from "./utils";
+ 
+ export async function handleOAuthUserInfo(
+@@ -47,11 +48,13 @@ export async function handleOAuthUserInfo(
+ 			);
+ 		if (!linkedAccount) {
+ 			const accountLinking = c.context.options.account?.accountLinking;
+-			const trustedProviders =
+-				c.context.options.account?.accountLinking?.trustedProviders;
++			const trustedProviders = await getTrustedProviders(
++				c.context.options,
++				c.request,
++			);
+ 			const isTrustedProvider =
+ 				opts.isTrustedProvider ||
+-				trustedProviders?.includes(account.providerId);
++				trustedProviders.includes(account.providerId);
+ 			if (
+ 				(!isTrustedProvider && !userInfo.emailVerified) ||
+ 				accountLinking?.enabled === false ||
+diff --git a/packages/better-auth/src/plugins/one-tap/index.ts b/packages/better-auth/src/plugins/one-tap/index.ts
+index ca272ae32..fee92cb48 100644
+--- a/packages/better-auth/src/plugins/one-tap/index.ts
++++ b/packages/better-auth/src/plugins/one-tap/index.ts
+@@ -5,6 +5,7 @@ import * as z from "zod";
+ import { APIError } from "../../api";
+ import { setSessionCookie } from "../../cookies";
+ import { parseUserOutput } from "../../db/schema";
++import { getTrustedProviders } from "../../oauth2/get-trusted-providers";
+ import { toBoolean } from "../../utils/boolean";
+ 
+ declare module "@better-auth/core" {
+@@ -150,10 +151,13 @@ export const oneTap = (options?: OneTapOptions | undefined) =>
+ 					const account = await ctx.context.internalAdapter.findAccount(sub);
+ 					if (!account) {
+ 						const accountLinking = ctx.context.options.account?.accountLinking;
++						const trustedProviders = await getTrustedProviders(
++							ctx.context.options,
++							ctx.request,
++						);
+ 						const shouldLinkAccount =
+ 							accountLinking?.enabled !== false &&
+-							(accountLinking?.trustedProviders?.includes("google") ||
+-								email_verified);
++							(trustedProviders.includes("google") || email_verified);
+ 						if (shouldLinkAccount) {
+ 							await ctx.context.internalAdapter.linkAccount({
+ 								userId: user.user.id,
+diff --git a/packages/core/src/types/init-options.ts b/packages/core/src/types/init-options.ts
+index 91dfb07db..4a57eb36c 100644
+--- a/packages/core/src/types/init-options.ts
++++ b/packages/core/src/types/init-options.ts
+@@ -888,10 +888,45 @@ export type BetterAuthOptions = {
+ 					disableImplicitLinking?: boolean;
+ 					/**
+ 					 * List of trusted providers
++					 *
++					 * This can either be a static array of providers, or a
++					 * function that dynamically resolves the list of trusted
++					 * providers based on the incoming request. The dynamic
++					 * resolver mirrors the shape used by `trustedOrigins` and
++					 * is useful for cases like enterprise SAML where the
++					 * allow-list depends on the tenant identified by something
++					 * on the incoming request (subdomain, header, query param).
++					 *
++					 * @param request - The request object. It'll be undefined
++					 * if no request was made (e.g. during a create context call
++					 * or `auth.api` call).
++					 *
++					 * @example
++					 * ```ts
++					 * trustedProviders: async (request) => {
++					 *   return ["google", request?.headers.get("x-saml-provider")];
++					 * }
++					 * ```
+ 					 */
+-					trustedProviders?: Array<
+-						LiteralUnion<SocialProviderList[number] | "email-password", string>
+-					>;
++					trustedProviders?:
++						| Array<
++								LiteralUnion<
++									SocialProviderList[number] | "email-password",
++									string
++								>
++						  >
++						| ((
++								request?: Request | undefined,
++						  ) => Awaitable<
++								(
++									| LiteralUnion<
++											SocialProviderList[number] | "email-password",
++										string
++									  >
++									| undefined
++									| null
++								)[]
++						  >);
+ 					/**
+ 					 * If enabled (true), this will allow users to manually linking accounts with different email addresses than the main user.
+ 					 *
+diff --git a/packages/sso/src/routes/sso.ts b/packages/sso/src/routes/sso.ts
+index c25f9d9ba..8e4af6620 100644
+--- a/packages/sso/src/routes/sso.ts
++++ b/packages/sso/src/routes/sso.ts
+@@ -16,7 +16,7 @@ import {
+ } from "better-auth/api";
+ import { deleteSessionCookie, setSessionCookie } from "better-auth/cookies";
+ import { generateRandomString } from "better-auth/crypto";
+-import { handleOAuthUserInfo } from "better-auth/oauth2";
++import { getTrustedProviders, handleOAuthUserInfo } from "better-auth/oauth2";
+ import { XMLParser } from "fast-xml-parser";
+ import { decodeJwt } from "jose";
+ import * as saml from "samlify";
+@@ -2360,10 +2360,12 @@ export const callbackSSOSAML = (options?: SSOOptions) => {
+ 				});
+ 			}
+ 
++			const trustedProviders = await getTrustedProviders(
++				ctx.context.options,
++				ctx.request,
++			);
+ 			const isTrustedProvider: boolean =
+-				!!ctx.context.options.account?.accountLinking?.trustedProviders?.includes(
+-					provider.providerId,
+-				) ||
++				trustedProviders.includes(provider.providerId) ||
+ 				("domainVerified" in provider &&
+ 					!!(provider as { domainVerified?: boolean }).domainVerified &&
+ 					validateEmailDomain(userInfo.email as string, provider.domain));
+@@ -2878,10 +2880,12 @@ export const acsEndpoint = (options?: SSOOptions) => {
+ 				});
+ 			}
+ 
++			const trustedProviders = await getTrustedProviders(
++				ctx.context.options,
++				ctx.request,
++			);
+ 			const isTrustedProvider: boolean =
+-				!!ctx.context.options.account?.accountLinking?.trustedProviders?.includes(
+-					provider.providerId,
+-				) ||
++				trustedProviders.includes(provider.providerId) ||
+ 				("domainVerified" in provider &&
+ 					!!(provider as { domainVerified?: boolean }).domainVerified &&
+ 					validateEmailDomain(userInfo.email as string, provider.domain));
+diff --git a/packages/telemetry/src/detectors/detect-auth-config.ts b/packages/telemetry/src/detectors/detect-auth-config.ts
+index 9b1b687fb..0f8ff5f53 100644
+--- a/packages/telemetry/src/detectors/detect-auth-config.ts
++++ b/packages/telemetry/src/detectors/detect-auth-config.ts
+@@ -102,7 +102,14 @@ export async function getTelemetryAuthConfig(
+ 			updateAccountOnSignIn: options.account?.updateAccountOnSignIn,
+ 			accountLinking: {
+ 				enabled: options.account?.accountLinking?.enabled,
+-				trustedProviders: options.account?.accountLinking?.trustedProviders,
++				trustedProviders: Array.isArray(
++					options.account?.accountLinking?.trustedProviders,
++				)
++					? options.account?.accountLinking?.trustedProviders
++					: typeof options.account?.accountLinking?.trustedProviders ===
++							"function"
++						? "dynamic"
++						: undefined,
+ 				updateUserInfoOnLink:
+ 					options.account?.accountLinking?.updateUserInfoOnLink,
+ 				allowUnlinkingAll: options.account?.accountLinking?.allowUnlinkingAll,

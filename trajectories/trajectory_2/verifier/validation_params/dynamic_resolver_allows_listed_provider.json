@@ -1,0 +1,30 @@
+{
+  "story_id": "dynamic_resolver_allows_listed_provider",
+  "test_cases": [
+    {
+      "inputs": {
+        "resolver_returns": [
+          "google"
+        ],
+        "configured_callback_url": "/dashboard"
+      },
+      "expected": {
+        "linked_account_count": 1,
+        "redirect_substring": "/dashboard"
+      }
+    },
+    {
+      "inputs": {
+        "resolver_returns": [
+          "google",
+          "github"
+        ],
+        "configured_callback_url": "/welcome-aboard"
+      },
+      "expected": {
+        "linked_account_count": 1,
+        "redirect_substring": "/welcome-aboard"
+      }
+    }
+  ]
+}

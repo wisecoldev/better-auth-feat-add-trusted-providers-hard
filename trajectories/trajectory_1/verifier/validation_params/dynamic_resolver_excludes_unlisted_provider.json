@@ -1,0 +1,26 @@
+{
+  "story_id": "dynamic_resolver_excludes_unlisted_provider",
+  "test_cases": [
+    {
+      "inputs": {
+        "resolver_returns": []
+      },
+      "expected": {
+        "linked_account_count": 0,
+        "resolved_list_size": 0
+      }
+    },
+    {
+      "inputs": {
+        "resolver_returns": [
+          "github",
+          "facebook"
+        ]
+      },
+      "expected": {
+        "linked_account_count": 0,
+        "resolved_list_size": 2
+      }
+    }
+  ]
+}

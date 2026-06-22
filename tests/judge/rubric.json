@@ -1,0 +1,29 @@
+{
+  "files": [
+    "packages/better-auth/src/api/routes/account.ts",
+    "packages/better-auth/src/api/routes/callback.ts",
+    "packages/better-auth/src/auth/base.ts",
+    "packages/better-auth/src/context/create-context.ts",
+    "packages/better-auth/src/context/helpers.ts",
+    "packages/better-auth/src/oauth2/link-account.ts",
+    "packages/better-auth/src/plugins/one-tap/index.ts",
+    "packages/core/src/types/context.ts",
+    "packages/core/src/types/init-options.ts",
+    "packages/sso/src/routes/sso.ts"
+  ],
+  "fail_to_pass": [
+    {
+      "name": "trusted_providers_type_widened_to_function",
+      "description": "The public `BetterAuthOptions` type for `account.accountLinking.trustedProviders` accepts BOTH a static array (the existing shape) AND a function shape that takes an optional `Request` and returns `Awaitable<string[]>` (i.e. `T[] | Promise<T[]>`). Both branches of the union are part of the option's static type — applications can assign either shape without a TypeScript error."
+    },
+    {
+      "name": "all_account_linking_callsites_use_resolved_list",
+      "description": "Every existing account-linking trust check has been updated so that its decision is driven by the RESOLVED trusted-providers list (whether the implementation stores it on AuthContext, resolves it inline at the callsite via a helper, or any other valid arrangement) — not by reading `options.account.accountLinking.trustedProviders` directly. The Google One Tap plugin's link-existing-user branch and the SAML SSO callback + ACS endpoints in `@better-auth/sso` are included in this — coverage cannot stop at the OAuth-callback flow."
+    },
+    {
+      "name": "documentation_explains_dynamic_shape",
+      "description": "The trustedProviders documentation explains the new dynamic-function shape so application authors know they can supply a per-request resolver. This may live in any combination of the JSDoc on the option type, the docs/content/docs/reference/options.mdx reference, or both — what matters is that a reader of the public docs/types learns that the option accepts a request-receiving async function in addition to a static array."
+    }
+  ],
+  "pass_to_pass": []
+}

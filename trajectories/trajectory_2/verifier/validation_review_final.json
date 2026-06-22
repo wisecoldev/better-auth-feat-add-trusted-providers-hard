@@ -1,0 +1,36 @@
+{
+  "per_criterion": {
+    "behavioral_authenticity": 3,
+    "procedure_fidelity": 3,
+    "story_coverage": 3,
+    "execution_outcome_alignment": 3,
+    "expected_fidelity": 3
+  },
+  "rationales": {
+    "behavioral_authenticity": "[REDACTED]",
+    "procedure_fidelity": "Each story follows the prescribed OAuth callback recipe precisely: fresh auth instance per case, unique email/sub, msw token stub, signIn.social, callback fetch, adapter query \u2014 matching the procedure's instructions including the spy pattern for story 2 and the tenant query param for story 3.",
+    "story_coverage": "All three declared stories have corresponding test files with it.each(cases) covering both test cases each.",
+    "execution_outcome_alignment": "The patch implements isProviderTrusted/resolveTrustedProviders supporting async resolver functions; all 6 cases pass, which is consistent with the patch correctly implementing the feature under test.",
+    "expected_fidelity": "Story 1 asserts linkedAccountCount, redirect_substring contains check, and the 'error=account_not_linked' absence check. Story 2 asserts linkedAccountCount and resolvedListSize unconditionally. Story 3 asserts linkedAccountCount and redirect_substring. All expected keys are used unconditionally."
+  },
+  "per_story": {
+    "dynamic_resolver_allows_listed_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script correctly uses async resolver returning inputs.resolver_returns, asserts linkedAccountCount equals expected.linked_account_count, redirectLocation contains expected.redirect_substring, and redirectLocation does not contain 'error=account_not_linked'."
+    },
+    "dynamic_resolver_excludes_unlisted_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script uses vi.fn spy as prescribed, reads spy's last return value for resolvedListSize, and asserts both linkedAccountCount and resolvedListSize against their expected values unconditionally."
+    },
+    "dynamic_resolver_per_request_decision": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script implements the tenant query param resolver exactly as specified, passes inputs.tenant in the callback query, and asserts both linkedAccountCount and redirect_substring per the procedure."
+    }
+  },
+  "overall": 3.0,
+  "discard_recommended": false,
+  "discard_reasons": []
+}

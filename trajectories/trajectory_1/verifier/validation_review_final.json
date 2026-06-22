@@ -1,0 +1,36 @@
+{
+  "per_criterion": {
+    "behavioral_authenticity": 3,
+    "procedure_fidelity": 3,
+    "story_coverage": 3,
+    "execution_outcome_alignment": 3,
+    "expected_fidelity": 3
+  },
+  "rationales": {
+    "behavioral_authenticity": "[REDACTED]",
+    "procedure_fidelity": "Each script implements the prescribed recipe precisely: per-case getTestInstance with async trustedProviders resolver, adapter.create for pre-existing user, msw stub for Google token endpoint, client.signIn.social + /callback/google drive, and account row query. Story 2 uses vi.fn spy exactly as the procedure instructs and reads resolverSpy.mock.results. Story 3 passes the tenant query param as specified.",
+    "story_coverage": "All three stories have corresponding test files, and both test cases within each story are covered via it.each(cases) driven by getTestCases(). Every declared test_case maps to an executed case.",
+    "execution_outcome_alignment": "The patch adds getTrustedProviders that resolves the allow-list from a static array or an async function, and wires it into the OAuth callback route. All 6 cases pass, which aligns with the patch correctly implementing the dynamic resolver feature for both the allow and reject branches.",
+    "expected_fidelity": "Story 1 asserts on both linked_account_count and redirect_substring, plus the negative error check. Story 2 asserts on both linked_account_count and resolved_list_size unconditionally. Story 3 asserts on both linked_account_count and redirect_substring per case. All expected keys are used without conditional guards."
+  },
+  "per_story": {
+    "dynamic_resolver_allows_listed_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script follows the recipe exactly, asserts linkedAccountCount == expected.linked_account_count, redirectLocation contains expected.redirect_substring, and redirectLocation does not contain 'error=account_not_linked'."
+    },
+    "dynamic_resolver_excludes_unlisted_provider": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script uses vi.fn spy as prescribed, reads mock.results.at(-1) to compute resolvedListSize, and asserts both linked_account_count (0) and resolved_list_size unconditionally per case."
+    },
+    "dynamic_resolver_per_request_decision": {
+      "implemented": true,
+      "faithful_score": 3.0,
+      "notes": "Script implements the tenant-query-param resolver exactly as specified, passes tenant via the callback query, and asserts both linked_account_count and redirect_substring for the allow and reject cases."
+    }
+  },
+  "overall": 3.0,
+  "discard_recommended": false,
+  "discard_reasons": []
+}

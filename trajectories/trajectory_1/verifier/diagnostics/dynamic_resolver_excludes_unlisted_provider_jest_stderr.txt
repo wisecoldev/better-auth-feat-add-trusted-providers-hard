@@ -1,0 +1,8 @@
+(node:3911) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[90mstderr[2m | src/oauth2/__validation__/dynamic_resolver_excludes_unlisted_provider.test.tsx[2m > [22m[2mdynamic_resolver_excludes_unlisted_provider[2m > [22m[2mcase $#
+[22m[39m[2m2026-06-01T00:28:35.883Z[0m [31mERROR[0m [1m[Better Auth]:[0m account_not_linked
+
+[90mstderr[2m | src/oauth2/__validation__/dynamic_resolver_excludes_unlisted_provider.test.tsx[2m > [22m[2mdynamic_resolver_excludes_unlisted_provider[2m > [22m[2mcase $#
+[22m[39m[2m2026-06-01T00:28:36.090Z[0m [31mERROR[0m [1m[Better Auth]:[0m account_not_linked
+

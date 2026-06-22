@@ -1,0 +1,10 @@
+{
+  "passed": 1,
+  "total": 1,
+  "all_pass": true,
+  "tests": {
+    "js::trusted providers (dynamic) static array still trusts the provider in OAuth account linking": {
+      "pass": true
+    }
+  }
+}

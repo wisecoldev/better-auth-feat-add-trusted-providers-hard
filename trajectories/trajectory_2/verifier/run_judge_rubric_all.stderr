@@ -1,0 +1,28 @@
+    read_file: packages/better-auth/src/oauth2/link-account.ts
+    read_file: packages/core/src/types/init-options.ts [880-920]
+  [rubric turn 0] stop=tool_use tools=2
+    read_file: packages/better-auth/src/oauth2/link-account.test.ts [567-720]
+    read_file: packages/better-auth/src/api/routes/account.ts [280-310]
+  [rubric turn 1] stop=tool_use tools=2
+    read_file: packages/better-auth/src/api/routes/callback.ts [170-200]
+    read_file: packages/better-auth/src/plugins/one-tap/index.ts [145-175]
+  [rubric turn 2] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2355-2385]
+    read_file: packages/sso/src/routes/sso.ts [2870-2900]
+  [rubric turn 3] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2385-2405]
+    read_file: packages/sso/src/routes/sso.ts [2900-2920]
+  [rubric turn 4] stop=tool_use tools=2
+    read_file: docs/content/docs/concepts/users-accounts.mdx [430-475]
+    read_file: docs/content/docs/reference/options.mdx [430-475]
+  [rubric turn 5] stop=tool_use tools=2
+    read_file: packages/telemetry/src/detectors/detect-auth-config.ts [1-120]
+    read_file: packages/better-auth/src/oauth2/link-account.test.ts [1-50]
+  [rubric turn 6] stop=tool_use tools=2
+    read_file: packages/sso/src/routes/sso.ts [2300-2370]
+    read_file: docs/content/docs/plugins/sso.mdx [1440-1465]
+  [rubric turn 7] stop=tool_use tools=2
+    read_file: packages/better-auth/src/oauth2/link-account.ts [63-92]
+  [rubric turn 8] stop=tool_use tools=1
+    submit_scores: 7 criteria
+  [rubric turn 9] stop=tool_use tools=1

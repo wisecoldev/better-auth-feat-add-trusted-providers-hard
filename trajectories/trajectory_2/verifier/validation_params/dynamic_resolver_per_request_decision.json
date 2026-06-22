@@ -1,0 +1,23 @@
+{
+  "story_id": "dynamic_resolver_per_request_decision",
+  "test_cases": [
+    {
+      "inputs": {
+        "tenant": "alpha"
+      },
+      "expected": {
+        "linked_account_count": 1,
+        "redirect_substring": "/dashboard"
+      }
+    },
+    {
+      "inputs": {
+        "tenant": "beta"
+      },
+      "expected": {
+        "linked_account_count": 0,
+        "redirect_substring": "error=account_not_linked"
+      }
+    }
+  ]
+}

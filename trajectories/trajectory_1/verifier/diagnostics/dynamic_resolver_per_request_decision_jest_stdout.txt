@@ -1,0 +1,11 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/repo/better-auth[39m
+
+ [32m✓[39m [30m[43m better-auth [49m[39m src/oauth2/__validation__/dynamic_resolver_per_request_decision.test.tsx[2m > [22mdynamic_resolver_per_request_decision[2m > [22mcase $#[32m 230[2mms[22m[39m
+ [32m✓[39m [30m[43m better-auth [49m[39m src/oauth2/__validation__/dynamic_resolver_per_request_decision.test.tsx[2m > [22mdynamic_resolver_per_request_decision[2m > [22mcase $#[32m 198[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 20:28:37
+[2m   Duration [22m 3.16s[2m (transform 1.71s, setup 0ms, import 2.55s, tests 432ms, environment 0ms)[22m
+

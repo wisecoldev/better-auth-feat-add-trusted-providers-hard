@@ -1,0 +1,183 @@
+version = "1.0"
+
+[environment]
+base_image = "better-auth-feat-add-trusted-providers:latest"
+build_timeout_sec = 1800.0
+cpus = 4
+memory = "4G"
+storage = "20G"
+allow_internet = true
+
+[verifier]
+timeout_sec = 1200.0
+
+[verifier.env]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+PORTKEY_API_KEY = "${PORTKEY_API_KEY:-}"
+VAL_AGENT_PORTKEY_KEY = "${VAL_AGENT_PORTKEY_KEY:-}"
+CC_VAL_PORTKEY_KEY = "${CC_VAL_PORTKEY_KEY:-}"
+FORCE_VA_HARNESS = "${FORCE_VA_HARNESS:-}"
+FORCE_VA_MODEL = "${FORCE_VA_MODEL:-}"
+REPO_NAME = "better-auth"
+TIMEOUT_MULTIPLIER = "${TIMEOUT_MULTIPLIER:-1}"
+
+[agent]
+timeout_sec = 7200.0
+
+[solution.env]
+REPO_NAME = "better-auth"
+
+[metadata]
+family = "better-auth-feat-add-trusted-providers"
+variant = "hard"
+segment = "implementation"
+repo = "better-auth"
+tags = ["better-auth", "typescript-lib"]
+in_benchmark = true
+
+[metadata.narrative]
+description = """Better Auth's account-linking system already lets developers mark certain
+identity providers as 'trusted' so that those providers can complete an
+account link even when the email coming back from the OAuth callback is
+not (yet) verified. Today that allow-list is a static string array baked
+into the BetterAuth options at startup.
+
+Some integrations need that allow-list to be dynamic per-request. The
+canonical case is an enterprise SAML setup where the trusted-provider
+list depends on the tenant — which is identified by something on the
+incoming Request (subdomain, header, query param). Today there is no way
+to express that, and apps have to either trust everything (security
+risk) or hard-code a SAML provider into the static config (kills the
+dynamic-tenant flow).
+
+Extend the trusted-providers configuration so it accepts the same kind
+of dynamic resolver that 'trustedOrigins' already accepts: either a
+static list, or an async function that receives the incoming Request
+and returns the list. The function's return value must drive the trust
+decision in every account-linking entry point — interactive linkSocial,
+OAuth callback, Google One Tap, and SAML SSO callback/ACS endpoints.
+"""
+context = """Account-linking trust is consulted in several places, all reading from
+'options.account.accountLinking.trustedProviders' before this PR:
+  - packages/better-auth/src/api/routes/account.ts (linkSocial endpoint)
+  - packages/better-auth/src/api/routes/callback.ts (OAuth callback handler)
+  - packages/better-auth/src/oauth2/link-account.ts (handleOAuthUserInfo)
+  - packages/better-auth/src/plugins/one-tap/index.ts (Google One Tap flow)
+  - packages/sso/src/routes/sso.ts (callbackSSOSAML + acsEndpoint)
+
+The repo already has the same 'static-or-async-function' pattern wired
+for trustedOrigins:
+  - Type signature in packages/core/src/types/init-options.ts
+    (BetterAuthOptions.trustedOrigins)
+  - Resolver in packages/better-auth/src/context/helpers.ts
+    (getTrustedOrigins)
+  - Cached on AuthContext in packages/core/src/types/context.ts
+    (trustedOrigins: string[])
+  - Populated at init in packages/better-auth/src/context/create-context.ts
+  - Re-resolved per-request in packages/better-auth/src/auth/base.ts
+    (auth.handler reassigns ctx.trustedOrigins before dispatching)
+  - Tests in packages/better-auth/src/auth/trusted-origins.test.ts
+    (especially the 'dynamic trusted origins' describe block)
+
+This pattern is the obvious template for trustedProviders. The hard
+parts are:
+  1. Touching all five callsites consistently — missing one (e.g. the
+     SSO ACS endpoint) leaves a broken-windows feature.
+  2. Re-resolving per-request, not just at init — otherwise
+     tenant-specific dynamic lists stay frozen at the value the very
+     first request produced.
+  3. Threading the actual incoming Request into the resolver — without
+     it, the function has no way to make a per-request decision.
+  4. Defensive handling when the resolver function itself returns
+     undefined / null / a list with falsy entries — the existing
+     trustedOrigins resolver filters with
+     `.filter((v): v is string => Boolean(v))`.
+
+Test infrastructure to lean on:
+  - `getTestInstance` from `better-auth/test` builds an in-memory
+    SQLite-backed auth instance with the default Google + GitHub
+    social providers wired (clientId/clientSecret 'test'/'test').
+    No real network calls — the test client uses customFetchImpl that
+    routes directly to `auth.handler`.
+  - msw (`msw/node` setupServer) is the standard way to stub the
+    OAuth token exchange at https://oauth2.googleapis.com/token. Every
+    OAuth-flow test in the repo uses it.
+  - `signJWT` from `../crypto` + `DEFAULT_SECRET` from
+    `../utils/constants` produces id_tokens that the GoogleProfile
+    validator accepts.
+"""
+solution = """The canonical fix (reference example) mirrors the existing trustedOrigins implementation:
+
+  1. Widens the option type in init-options.ts so trustedProviders
+     accepts `T[] | ((request?: Request) => Awaitable<T[]>)` (where T
+     is the LiteralUnion of social-provider names plus 'email-password').
+  2. Adds `trustedProviders: string[]` to AuthContext in
+     core/types/context.ts.
+  3. Adds an async helper `getTrustedProviders(options, request?)` in
+     context/helpers.ts that branches on Array.isArray, awaits the
+     function with the request, and filters out falsy values.
+  4. Calls `getTrustedProviders(options)` (no request) at context
+     construction in create-context.ts to populate the field at init.
+  5. Reassigns `ctx.trustedProviders = await getTrustedProviders(ctx.options, request)`
+     inside `auth.handler` in base.ts on every incoming request,
+     mirroring what the existing trustedOrigins line does immediately
+     above it.
+  6. Replaces every direct read of
+     `c.context.options.account?.accountLinking?.trustedProviders?.includes(...)`
+     with `c.context.trustedProviders.includes(...)` across the five
+     callsites listed in context.
+
+Equally valid alternatives we accept:
+  - Skip the AuthContext field entirely and resolve inline at each
+    callsite. Slightly more code at the callsites, no helper, no
+    init-time resolution. Behavior the user sees is identical.
+  - Use a different helper name or place the helper in a different
+    module.
+  - Resolve only per-request (skip the init-time call). The init-time
+    call exists in the reference example for parity with trustedOrigins, but a
+    per-request-only implementation is functionally equivalent for
+    account-linking.
+
+What naive implementations get wrong:
+  - Touching only one or two of the five callsites (the OAuth callback
+    flow visibly works but linkSocial / one-tap / SSO silently still
+    read the raw option).
+  - Forgetting to thread the Request into the resolver: the
+    create-context init call passes no request which is fine, but
+    auth.handler MUST pass the incoming request so per-request
+    decisions work.
+  - Caching the resolved list at init only and never re-resolving per
+    request: the tenant-aware case fails silently because every request
+    after the first sees the wrong list.
+  - Calling the function without `await` — forgetting that the resolver
+    can be async (Awaitable<T[]>).
+  - Not filtering falsy values from the resolved list — a resolver
+    that returns `["google", null, undefined, ""]` should not break
+    `.includes` lookups downstream.
+"""
+
+[metadata.taxonomy]
+task_type = "feature"
+stack = ["typescript-lib"]
+estimated_human_time = "extended"
+runtime_dependence = "runtime-helpful"
+misdirection = "passive"
+skills = ["codebase-exploration", "interface-design", "framework-fluency", "api-contract-design", "security-reasoning", "logic-fix"]
+skill_breadth = "moderate"
+
+[metadata.oracle_scope]
+sloc = 91
+files = 10
+hunks = 15
+scope = "broad"
+
+[metadata.origin]
+repo = "better-auth/better-auth"
+pr_numbers = [7904]
+base_commit = "76d9ba140c0c9bdf54e60db8fc3a50bb8b9a7c5a"
+base_commit_date = "2026-02-11"
+merged_at = "2026-02-19"
+
+
+
+
